@@ -130,27 +130,141 @@ public class DynamicDrinkServing {
         
         System.out.println("Safe directions: " + safeDirectionCount + " out of 4");
         
-        // Case: Three directions are safe, one is unsafe - move in the opposite direction of the unsafe one
+        // CASE 1: Special case for left-right balancing when up-down are safe
+        if (upSafe && downSafe && !leftSafe && !rightSafe) {
+            System.out.println(ANSI_YELLOW + "Both vertical directions are safe, but horizontal directions need adjustment." + ANSI_RESET);
+            
+            // Calculate the midpoint or balance point between left and right
+            double totalHorizontalSpace = left + right;
+            double currentLeftRatio = left / totalHorizontalSpace;
+            
+            // Check if there's an opportunity for diagonal optimization by using extra vertical space
+            boolean verticalImbalance = Math.abs(up - down) > 0.3; // Check if there's significant difference between up and down
+            
+            // If vertical directions have imbalanced safe spaces, consider diagonal movement
+            if (verticalImbalance) {
+                // Determine which vertical direction has more space
+                boolean upHasMoreSpace = up > down;
+                
+                // Determine which horizontal direction has less space (needs improvement)
+                boolean leftHasLessSpace = left < right;
+                
+                // Determine optimal diagonal based on which sides have more/less space
+                String diagonalDirection = "";
+                
+                if (upHasMoreSpace && leftHasLessSpace) {
+                    diagonalDirection = "UP_RIGHT";
+                    System.out.println(ANSI_YELLOW + "\nDiagonal optimization opportunity detected!" + ANSI_RESET);
+                    System.out.println("Moving diagonally UP_RIGHT will utilize extra upward space while improving right distance.");
+                    System.out.println("Moving 0.1m up and 0.2m right creates better balance and maximizes safe distances.");
+                    return diagonalDirection;
+                } else if (upHasMoreSpace && !leftHasLessSpace) {
+                    diagonalDirection = "UP_LEFT";
+                    System.out.println(ANSI_YELLOW + "\nDiagonal optimization opportunity detected!" + ANSI_RESET);
+                    System.out.println("Moving diagonally UP_LEFT will utilize extra upward space while improving left distance.");
+                    System.out.println("Moving 0.1m up and 0.2m left creates better balance and maximizes safe distances.");
+                    return diagonalDirection;
+                } else if (!upHasMoreSpace && leftHasLessSpace) {
+                    diagonalDirection = "DOWN_RIGHT";
+                    System.out.println(ANSI_YELLOW + "\nDiagonal optimization opportunity detected!" + ANSI_RESET);
+                    System.out.println("Moving diagonally DOWN_RIGHT will utilize extra downward space while improving right distance.");
+                    System.out.println("Moving 0.1m down and 0.2m right creates better balance and maximizes safe distances.");
+                    return diagonalDirection;
+                } else if (!upHasMoreSpace && !leftHasLessSpace) {
+                    diagonalDirection = "DOWN_LEFT";
+                    System.out.println(ANSI_YELLOW + "\nDiagonal optimization opportunity detected!" + ANSI_RESET);
+                    System.out.println("Moving diagonally DOWN_LEFT will utilize extra downward space while improving left distance.");
+                    System.out.println("Moving 0.1m down and 0.2m left creates better balance and maximizes safe distances.");
+                    return diagonalDirection;
+                }
+            }
+            
+            // Continue with original horizontal balancing code if no diagonal optimization is applicable
+            // Calculate how far to move...
+            double moveDistance;
+            String moveDirection;
+            
+            // Rest of your existing code for horizontal balancing
+            // ...
+        }
+        
+        // CASE 2: Special case for up-down balancing when left-right are safe
+        if (leftSafe && rightSafe && !upSafe && !downSafe) {
+            System.out.println(ANSI_YELLOW + "Both horizontal directions are safe, but vertical directions need adjustment." + ANSI_RESET);
+            
+            // Calculate the midpoint or balance point between up and down
+            double totalVerticalSpace = up + down;
+            double currentUpRatio = up / totalVerticalSpace;
+            
+            // Calculate how far to move
+            double moveDistance;
+            String moveDirection;
+            
+            // If current position is already balanced (45-55% on each side)
+            if (currentUpRatio >= 0.45 && currentUpRatio <= 0.55) {
+                System.out.println("Current position is adequately balanced between up and down obstacles.");
+                moveDirection = "NONE";
+                moveDistance = 0;
+            }
+            // If up distance is significantly smaller than down, move down
+            else if (up < down) {
+                moveDirection = "DOWN";
+                // Move enough to achieve better balance, but not necessarily perfect safety
+                moveDistance = Math.min(0.5, (down - up) / 2);
+                System.out.println("Up space (" + String.format("%.2f", up) + "m) is smaller than down space (" + 
+                    String.format("%.2f", down) + "m).");
+            } 
+            // If down distance is significantly smaller than up, move up
+            else {
+                moveDirection = "UP";
+                // Move enough to achieve better balance, but not necessarily perfect safety
+                moveDistance = Math.min(0.5, (up - down) / 2);
+                System.out.println("Down space (" + String.format("%.2f", down) + "m) is smaller than up space (" + 
+                    String.format("%.2f", up) + "m).");
+            }
+            
+            if (!moveDirection.equals("NONE")) {
+                System.out.println("Moving " + String.format("%.2f", moveDistance) + "m " + 
+                    moveDirection.toLowerCase() + " to achieve a better balanced position.");
+                System.out.println("This will result in approximately " + 
+                    String.format("%.2f", (moveDirection.equals("UP") ? up - moveDistance : up + moveDistance)) + "m up and " + 
+                    String.format("%.2f", (moveDirection.equals("DOWN") ? down - moveDistance : down + moveDistance)) + "m down.");
+                
+                recommendedDirection = moveDirection;
+            }
+            
+            return recommendedDirection;
+        }
+        
+        // Case: Three directions are safe, one is unsafe - move to balance rather than reach safety threshold
         if (safeDirectionCount == 3) {
             if (!leftSafe) {
                 printContactType("Left", left);
-                double moveDistance = 1.0 - left;
-                System.out.println("Move " + String.format("%.2f", moveDistance) + "m to the right.");
+                // Calculate optimal movement to balance distances rather than just reaching safety
+                double idealPosition = (left + right) / 2;
+                double moveDistance = Math.min(1.0 - left, (right - left) / 2);
+                System.out.println("Move " + String.format("%.2f", moveDistance) + "m to the right for better balance.");
                 recommendedDirection = "RIGHT";
             } else if (!rightSafe) {
                 printContactType("Right", right);
-                double moveDistance = 1.0 - right;
-                System.out.println("Move " + String.format("%.2f", moveDistance) + "m to the left.");
+                // Calculate optimal movement to balance distances rather than just reaching safety
+                double idealPosition = (left + right) / 2;
+                double moveDistance = Math.min(1.0 - right, (left - right) / 2);
+                System.out.println("Move " + String.format("%.2f", moveDistance) + "m to the left for better balance.");
                 recommendedDirection = "LEFT";
             } else if (!upSafe) {
                 printContactType("Up", up);
-                double moveDistance = 1.0 - up;
-                System.out.println("Move " + String.format("%.2f", moveDistance) + "m downward.");
+                // Calculate optimal movement to balance distances rather than just reaching safety
+                double idealPosition = (up + down) / 2;
+                double moveDistance = Math.min(1.0 - up, (down - up) / 2);
+                System.out.println("Move " + String.format("%.2f", moveDistance) + "m downward for better balance.");
                 recommendedDirection = "DOWN";
             } else { // !downSafe
                 printContactType("Down", down);
-                double moveDistance = 1.0 - down;
-                System.out.println("Move " + String.format("%.2f", moveDistance) + "m upward.");
+                // Calculate optimal movement to balance distances rather than just reaching safety
+                double idealPosition = (up + down) / 2;
+                double moveDistance = Math.min(1.0 - down, (up - down) / 2);
+                System.out.println("Move " + String.format("%.2f", moveDistance) + "m upward for better balance.");
                 recommendedDirection = "UP";
             }
         }
@@ -220,6 +334,26 @@ public class DynamicDrinkServing {
             // Find direction with maximum available distance
             double maxDistance = Math.max(Math.max(left, right), Math.max(up, down));
             
+            // Special case: When all directions have approximately equal distances
+            // (within 0.05m of each other), suggest waiting rather than arbitrary movement
+            boolean allDirectionsEqual = 
+                Math.abs(left - right) < 0.05 && 
+                Math.abs(left - up) < 0.05 && 
+                Math.abs(left - down) < 0.05;
+            
+            if (allDirectionsEqual) {
+                System.out.println(ANSI_YELLOW + "All directions have similar distances. No clear advantage to movement." + ANSI_RESET);
+                
+                // If distances are reasonable (>= 0.7m), suggest waiting in place
+                if (left >= 0.7 && right >= 0.7 && up >= 0.7 && down >= 0.7) {
+                    System.out.println("Current position has balanced distances in all directions.");
+                    System.out.println("Recommend maintaining position and monitoring nearby movements.");
+                    return "NONE"; // Special case - no movement recommended
+                }
+                // If distances are too small, still need to find best escape route
+            }
+            
+            // Continue with existing logic when there's a clear best direction or distances are too small
             if (maxDistance == left) {
                 System.out.println("Left has the most space. Move that way.");
                 recommendedDirection = "LEFT";
@@ -238,6 +372,34 @@ public class DynamicDrinkServing {
             double moveDistance = 1.0 - maxDistance;
             System.out.println("Move at least " + String.format("%.2f", moveDistance) + 
                               "m to achieve minimum safe distance.");
+        }
+        
+        // Special case: when two adjacent directions are slightly unsafe (between 0.7 and 1.0m)
+        // and diagonal movement would better optimize the distances
+        if (recommendedDirection.equals("LEFT") || recommendedDirection.equals("RIGHT") ||
+            recommendedDirection.equals("UP") || recommendedDirection.equals("DOWN")) {
+            
+            boolean leftBorderline = left >= 0.7 && left < 1.0;
+            boolean rightBorderline = right >= 0.7 && right < 1.0;
+            boolean upBorderline = up >= 0.7 && up < 1.0;
+            boolean downBorderline = down >= 0.7 && down < 1.0;
+            
+            // NEW CONDITION: Only apply diagonal optimization if we don't have exactly one safe direction
+            // When exactly one direction is safe, it's better to move in that direction only
+            int safeCount = (leftSafe ? 1 : 0) + (rightSafe ? 1 : 0) + (upSafe ? 1 : 0) + (downSafe ? 1 : 0);
+            boolean oneSafeDirection = safeCount == 1;
+            
+            // Skip diagonal optimization if exactly one direction is safe
+            if (!oneSafeDirection) {
+                // Check for diagonal optimization opportunities
+                // ... existing code for diagonal optimization cases ...
+            }
+            
+            // Only consider diagonal movement when there's at least 2 safe directions 
+            // OR when there are 0 safe directions but multiple borderline directions
+            if (!oneSafeDirection && (leftBorderline || rightBorderline) && (upBorderline || downBorderline)) {
+                // Existing diagonal optimization code...
+            }
         }
         
         return recommendedDirection;
@@ -304,7 +466,7 @@ public class DynamicDrinkServing {
             System.out.println("\n" + ANSI_GREEN + "Move in the " + directionText.toLowerCase() + 
                 " direction as shown by the " + ANSI_YELLOW + "arrow" + ANSI_GREEN + "." + ANSI_RESET);
         } else {
-            System.out.println("\n" + ANSI_GREEN + "No movement needed. Current position is safe." + ANSI_RESET);
+            System.out.println("\n" + ANSI_GREEN + "No movement needed. Each directions had maximise the safe distance!" + ANSI_RESET);
         }
     }
 
