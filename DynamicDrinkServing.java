@@ -12,7 +12,7 @@ public class DynamicDrinkServing {
     private static final String ANSI_BLUE = "\u001B[34m";
     private static final String ANSI_YELLOW = "\u001B[33m";
 
-    public static void checkDynamicDistancing() {
+    public static void checkDynamicDistancing(Robot robot) {
         Scanner scanner = new Scanner(System.in);
         
         System.out.println("\n" + ANSI_BLUE + "=== DYNAMIC DISTANCING CHECK ===" + ANSI_RESET);
@@ -65,7 +65,8 @@ public class DynamicDrinkServing {
 
             // Print robot details ONLY ONCE after processing all distances
             System.out.println("\nRobot Contact Details");
-            System.out.println("Robot ID: 20614522, Robot Name: Ivan Char Cheng Jun");
+            System.out.println("Robot ID: " + robot.getId() + ", Robot Name: " + robot.getName() + 
+                              ", Priority Level: " + robot.getPriorityLevel());
 
             // Format the date and time
             String formattedDate = LocalDate.now().toString();
@@ -73,6 +74,11 @@ public class DynamicDrinkServing {
             
             System.out.println("Date: " + formattedDate + ", Time: " + formattedTime);
         }
+    }
+    
+    // Overload for backward compatibility
+    public static void checkDynamicDistancing() {
+        checkDynamicDistancing(new Robot("20614522", "Ivan Char Cheng Jun", 3, false));
     }
     
     // Helper method to format and color the distance based on safety
