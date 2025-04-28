@@ -1,5 +1,4 @@
 import java.util.Scanner;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class StaticDrinkServing {
@@ -42,6 +41,9 @@ public class StaticDrinkServing {
     public static void main(String[] args) {
         System.out.println(ANSI_BLUE + "Welcome to the Drink Serving Robotic System!" + ANSI_RESET);
         
+        // Initialize the CSV file
+        CSVWriter.initializeCSV();
+        
         // Initial room size configuration
         configureRoomSizes();
         
@@ -65,15 +67,14 @@ public class StaticDrinkServing {
             }
 
             RestrictedSpots selectedSpot = spots[choice - 1];
-            // No need to display info here again, as it's shown in the table
-            // selectedSpot.displayInfo(); 
 
             if (selectedSpot.canEnter()) {
                 System.out.println(ANSI_GREEN + "\nEntrance permitted for " + selectedSpot.spotName + ". Proceeding to dynamic distancing check..." + ANSI_RESET);
                 // Assuming Robot class exists and you have an instance
                 Robot defaultRobot = new Robot("20614522", "Ivan Char Cheng Jun"); 
-                DynamicDrinkServing.checkDynamicDistancing(defaultRobot); // Pass robot instance
-            } else {
+                DynamicDrinkServing.checkDynamicDistancing(defaultRobot, selectedSpot); // Pass robot instance
+            } 
+            else {
                 // Use the getEstimatedWaitTime method for consistency
                 int simpleWaitTime = selectedSpot.getEstimatedWaitTime();
                 System.out.println(ANSI_ORANGE + "\n" + selectedSpot.spotName + " is full! Estimated wait time: " + simpleWaitTime + " minutes." + ANSI_RESET);
@@ -87,12 +88,14 @@ public class StaticDrinkServing {
                         System.out.println(ANSI_ORANGE + "Robot is now allowed to enter " + selectedSpot.spotName + " after waiting " + simpleWaitTime + " minutes." + ANSI_RESET);
                          // Assuming Robot class exists and you have an instance
                         Robot defaultRobot = new Robot("20614522", "Ivan Char Cheng Jun");
-                        DynamicDrinkServing.checkDynamicDistancing(defaultRobot); // Pass robot instance
+                        DynamicDrinkServing.checkDynamicDistancing(defaultRobot, selectedSpot); // Pass robot instance
                         break;
-                    } else if (waitChoice.equals("no")) {
+                    } 
+                    else if (waitChoice.equals("no")) {
                         System.out.println("Select another spot.");
                         break;
-                    } else {
+                    } 
+                    else {
                         System.out.println(ANSI_RED + "Invalid input! Please try again." + ANSI_RESET);
                     }
                 }
@@ -134,7 +137,14 @@ public class StaticDrinkServing {
                     configDone = true;
                     System.out.println(ANSI_GREEN + "Room configuration completed!" + ANSI_RESET);
                 }
-            } else if (choice >= 1 && choice <= 5) {
+                else if (confirm.equals("no")) {
+                    System.out.println(ANSI_RED + "Configuration not completed. Please finish before proceeding." + ANSI_RESET);
+                }
+                else{
+                    System.out.println(ANSI_RED + "Invalid input! Please enter 'yes' or 'no'." + ANSI_RESET);
+                }
+            } 
+            else if (choice >= 1 && choice <= 5) {
                 RestrictedSpots selectedSpot = spots[choice - 1];
                 System.out.println("\nSelected: " + selectedSpot.spotName + " (Current size: " + selectedSpot.spotArea + " m²)");
                 
@@ -154,7 +164,8 @@ public class StaticDrinkServing {
                 
                 // Display updated table
                 displayRoomSizesTable();
-            } else {
+            } 
+            else {
                 System.out.println(ANSI_RED + "Invalid choice! Please select 0-5." + ANSI_RESET);
             }
         }
@@ -191,8 +202,8 @@ public class StaticDrinkServing {
         // Define column widths (visible characters)
         int numWidth = 3;
         int nameWidth = 21;
-        int occupancyWidth = 14; // e.g., "XXX/XXX" or "FULL"
-        int waitTimeWidth = 19; // e.g., "No wait" or "XX minutes"
+        int occupancyWidth = 14;
+        int waitTimeWidth = 19;
 
         // Display the table header
         System.out.println("\n" + ANSI_BLUE + "=== CURRENT OCCUPANCY STATUS ===" + ANSI_RESET);

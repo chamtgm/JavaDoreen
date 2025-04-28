@@ -1,8 +1,6 @@
 public class Robot {
     private String id;
     private String name;
-    private int priorityLevel;
-    private boolean isActive;
 
     private static final String ANSI_RESET = "\u001B[0m";
     private static final String ANSI_BLUE = "\u001B[34m";

@@ -1,9 +1,11 @@
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Scanner;
 
 public class DynamicDrinkServing {
+    public static Scanner scanner = new Scanner(System.in);
 
     private static final String ANSI_RED = "\u001B[31m";
     private static final String ANSI_RESET = "\u001B[0m";
@@ -18,57 +20,71 @@ public class DynamicDrinkServing {
     public static final String ARROW_LEFT = "<-";    // ←
     public static final String ARROW_RIGHT = "->";   // →
     
-    public static final String ARROW_UP_RIGHT = "/^";   // ↗
-    public static final String ARROW_UP_LEFT = "^\\";    // ↖
-    public static final String ARROW_DOWN_RIGHT = "\\v"; // ↘
-    public static final String ARROW_DOWN_LEFT = "v/";  // ↙
+    public static final String ARROW_UP_RIGHT = "/";   // ↗
+    public static final String ARROW_UP_LEFT = "\\";    // ↖
+    public static final String ARROW_DOWN_RIGHT = "\\"; // ↘
+    public static final String ARROW_DOWN_LEFT = "/";  // ↙
 
-    public static void checkDynamicDistancing(Robot robot) {
-        Scanner scanner = new Scanner(System.in);
+    public static void checkDynamicDistancing(Robot robot, RestrictedSpots selectedRoom) {
     
         System.out.println("\n" + ANSI_BLUE + "=== DYNAMIC DISTANCING CHECK ===" + ANSI_RESET);
         System.out.println("Please enter the distance (in meters) from people in four directions:");
     
-        // Display visual robot position
-        System.out.println("\n                 " + ANSI_YELLOW + "[Up]" + ANSI_RESET);
-        System.out.println("\n");
-        System.out.println(ANSI_YELLOW + "[Left]" + ANSI_RESET + "           " + ANSI_GREEN + "[R]" + ANSI_RESET + "           " + ANSI_YELLOW + "[Right]" + ANSI_RESET);
-        System.out.println("\n");
-        System.out.println("                " + ANSI_YELLOW + "[Down]" + ANSI_RESET);
-    
         // Get distances
-        System.out.print("\nUp distance: ");
-        double front = scanner.nextDouble();
+        System.out.print("\nFront distance: ");
+        double inputUp = scanner.nextDouble();
     
         System.out.print("Left distance: ");
-        double left = scanner.nextDouble();
+        double inputLeft = scanner.nextDouble();
     
         System.out.print("Right distance: ");
-        double right = scanner.nextDouble();
+        double inputRight = scanner.nextDouble();
     
-        System.out.print("Down distance: ");
-        double back = scanner.nextDouble();
+        System.out.print("Back distance: ");
+        double inputDown = scanner.nextDouble();
     
-        if (left < 0 || right < 0 || front < 0 || back < 0) {
+        if (inputLeft < 0 || inputRight < 0 || inputUp < 0 || inputDown < 0) {
             System.out.println(ANSI_RED + "Error: Distances cannot be negative." + ANSI_RESET);
             return;
         }
     
         // Display the distances in the visual format
         System.out.println("\nDistances entered:");
-        System.out.println("\n             " + formatDistance(front) + " m");
+        System.out.println("\n             " + formatDistance(inputUp) + " m");
         System.out.println("\n");
-        System.out.println(formatDistance(left) + " m        " + ANSI_GREEN + "[R]" + ANSI_RESET + "        " + formatDistance(right) + " m");
+        System.out.println(formatDistance(inputLeft) + " m        " + ANSI_GREEN + "[R]" + ANSI_RESET + "        " + formatDistance(inputRight) + " m");
         System.out.println("\n");
-        System.out.println("             " + formatDistance(back) + " m");
+        System.out.println("             " + formatDistance(inputDown) + " m");
     
-        if (left >= 1 && right >= 1 && front >= 1 && back >= 1) {
+        // Initialize output directions
+        String outputUp = "NONE";
+        String outputLeft = "NONE";
+        String outputRight = "NONE";
+        String outputDown = "NONE";
+    
+        if (inputLeft >= 1 && inputRight >= 1 && inputUp >= 1 && inputDown >= 1) {
             System.out.println(ANSI_GREEN + "\nYou are safe in dynamic distancing!" + ANSI_RESET);
         } else {
             System.out.println(ANSI_RED + "\nAlert! Contact detected. The robot must adjust its position." + ANSI_RESET);
     
             // Call suggestion method that returns the recommended movement direction
-            String movementDirection = suggestMovement(left, right, front, back);
+            String movementDirection = suggestMovement(inputLeft, inputRight, inputUp, inputDown);
+    
+            // Update output directions based on the movement
+            switch (movementDirection) {
+                case "UP":
+                    outputUp = "UP";
+                    break;
+                case "DOWN":
+                    outputDown = "DOWN";
+                    break;
+                case "LEFT":
+                    outputLeft = "LEFT";
+                    break;
+                case "RIGHT":
+                    outputRight = "RIGHT";
+                    break;
+            }
     
             // Show movement visualization
             displayMovementArrow(movementDirection);
@@ -88,6 +104,10 @@ public class DynamicDrinkServing {
         for (RestrictedSpots spot : StaticDrinkServing.spots) {
             spot.regenerateOccupancy(); // Regenerate random occupancy
         }
+    
+        // Save the room entry record
+        int waitTime = selectedRoom.getEstimatedWaitTime();
+        saveRoomEntryRecord(selectedRoom, inputUp, inputLeft, inputRight, inputDown, outputUp, outputLeft, outputRight, outputDown, waitTime);
     }
     
     // Helper method to format and color the distance based on safety
@@ -203,10 +223,10 @@ public class DynamicDrinkServing {
                 else {
                     double leftMovement = left - 1;
                     double upMovement = up - 1;
-                    System.out.println(ANSI_YELLOW + "Safe directions are Leftward and Upward - move diagonally toward them." + ANSI_RESET);
-                    System.out.println("Move minimum " + String.format("%.2f", leftMovement) + 
-                                      "m leftward and " + String.format("%.2f", upMovement) + "m upward to balance between rightward ("  + String.format("%.2f", right) + 
-                                      "m) and downward (" + String.format("%.2f", down) + "m) obstacles.");
+                    System.out.println(ANSI_YELLOW + "Safe directions are Leftward and Frontward - move diagonally toward them." + ANSI_RESET);
+                    System.out.println("Move maximum " + String.format("%.2f", leftMovement) + 
+                                      "m leftward and " + String.format("%.2f", upMovement) + "m frontward to balance between rightward ("  + String.format("%.2f", right) + 
+                                      "m) and backward (" + String.format("%.2f", down) + "m) obstacles.");
                                       recommendedDirection = "UP_LEFT";
                 }
             }
@@ -219,9 +239,9 @@ public class DynamicDrinkServing {
                     double leftMovement = left - 1;
                     double downMovement = down - 1;
                     System.out.println(ANSI_YELLOW + "Safe directions are Leftward and Backward - move diagonally toward them." + ANSI_RESET);
-                    System.out.println("Move minimum " + String.format("%.2f", leftMovement) + 
-                                      "m leftward and " + String.format("%.2f", downMovement) + "m frontward to balance between rightward ("  + String.format("%.2f", right) + 
-                                      "m) and upward (" + String.format("%.2f", down) + "m) obstacles.");
+                    System.out.println("Move maximum " + String.format("%.2f", leftMovement) + 
+                                      "m leftward and " + String.format("%.2f", downMovement) + "m backward to balance between rightward ("  + String.format("%.2f", right) + 
+                                      "m) and frontward (" + String.format("%.2f", down) + "m) obstacles.");
                                       recommendedDirection = "DOWN_LEFT";
                 }
             } 
@@ -408,5 +428,35 @@ public class DynamicDrinkServing {
         
         System.out.println("Direction: " + direction + ", Distance: " + 
             String.format("%.2f", distance) + "m, Contact Type: " + contactType);
+    }
+
+    /**
+     * Saves the room entry details to a CSV file.
+     * @param room The room being entered.
+     * @param inputDirections The input directions data.
+     * @param outputDirections The output directions data.
+     * @param waitTime The wait time if the room was full.
+     */
+    public static void saveRoomEntryRecord(RestrictedSpots room, double inputUp, double inputLeft, double inputRight, double inputDown, 
+                                        String outputUp, String outputLeft, String outputRight, String outputDown, int waitTime) {
+    String timeEntered = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+    String record = String.format(
+        "%s,%.2f,%d,%d,%.1f,%.1f,%.1f,%.1f,%s,%s,%s,%s,%s,%d",
+        room.spotName,
+        room.spotArea,
+        room.maxCapacity,
+        room.currentOccupancy,
+        inputUp,
+        inputLeft,
+        inputRight,
+        inputDown,
+        outputUp,
+        outputLeft,
+        outputRight,
+        outputDown,
+        timeEntered,
+        waitTime
+    );
+    CSVWriter.writeRecord(record);
     }
 }
