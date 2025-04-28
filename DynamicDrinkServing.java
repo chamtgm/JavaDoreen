@@ -98,16 +98,16 @@ public class DynamicDrinkServing {
     
             System.out.println("Date: " + formattedDate + ", Time: " + formattedTime);
         }
+
+        // Save the room entry record
+        int waitTime = selectedRoom.getEstimatedWaitTime();
+        saveRoomEntryRecord(selectedRoom, inputUp, inputLeft, inputRight, inputDown, outputUp, outputLeft, outputRight, outputDown, waitTime);
     
         // Regenerate random occupancy and recalculate wait times
         System.out.println("\n" + ANSI_BLUE + "=== RELOADING SPOTS ===" + ANSI_RESET);
         for (RestrictedSpots spot : StaticDrinkServing.spots) {
             spot.regenerateOccupancy(); // Regenerate random occupancy
         }
-    
-        // Save the room entry record
-        int waitTime = selectedRoom.getEstimatedWaitTime();
-        saveRoomEntryRecord(selectedRoom, inputUp, inputLeft, inputRight, inputDown, outputUp, outputLeft, outputRight, outputDown, waitTime);
     }
     
     // Helper method to format and color the distance based on safety

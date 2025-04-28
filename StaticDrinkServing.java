@@ -15,11 +15,11 @@ public class StaticDrinkServing {
 
     private static Scanner scanner = new Scanner(System.in);
     public static RestrictedSpots[] spots = {
-        new RestrictedSpots("S1", "Dining Foyer", 120, 30),
-        new RestrictedSpots("S2", "Main Dining Hall", 300, 45),
-        new RestrictedSpots("S3", "Dining Room One", 215, 25),
-        new RestrictedSpots("S4", "Dining Room Two", 150, 20),
-        new RestrictedSpots("S5", "Family Dining Room", 250, 60)
+        new RestrictedSpots("S1", "Dining Foyer", 120),
+        new RestrictedSpots("S2", "Main Dining Hall", 300),
+        new RestrictedSpots("S3", "Dining Room One", 215),
+        new RestrictedSpots("S4", "Dining Room Two", 150),
+        new RestrictedSpots("S5", "Family Dining Room", 250)
     };
 
     // Helper function to get the visible length of a string (stripping ANSI codes)
