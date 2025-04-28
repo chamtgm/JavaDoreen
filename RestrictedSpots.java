@@ -49,14 +49,6 @@ public class RestrictedSpots {
         // Generate random occupancy between 0 and the adjusted randomOccupancyLimit
         this.currentOccupancy = new Random().nextInt(Math.max(1, randomOccupancyLimit + 1));
     }
-
-    /**
-     * Checks if the spot has space for entry based on current occupancy and max capacity.
-     * @return true if current occupancy is less than max capacity, false otherwise.
-     */
-    public boolean canEnter() {
-        return currentOccupancy < maxCapacity;
-    }
     
     /**
      * Calculates the estimated wait time in minutes if the spot is full.
@@ -84,7 +76,7 @@ public class RestrictedSpots {
         System.out.println("Spot Area: " + spotArea + " m², Max Capacity: " + maxCapacity);
         System.out.println("Current Occupancy: " + currentOccupancy);
         
-        if (!canEnter()) {
+        if (currentOccupancy > maxCapacity) {
             System.out.println("Estimated Wait Time: " + getEstimatedWaitTime() + " minutes");
         }
     }

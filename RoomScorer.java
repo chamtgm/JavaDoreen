@@ -9,7 +9,7 @@ public class RoomScorer {
         double score = 0;
 
         // Add bonus if the room is available
-        if (spot.canEnter()) {
+        if (spot.currentOccupancy < spot.maxCapacity) {
             score += 50; // Big bonus for availability
         }
 

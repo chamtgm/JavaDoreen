@@ -68,7 +68,7 @@ public class StaticDrinkServing {
 
             RestrictedSpots selectedSpot = spots[choice - 1];
 
-            if (selectedSpot.canEnter()) {
+            if (selectedSpot.currentOccupancy < selectedSpot.maxCapacity) {
                 System.out.println(ANSI_GREEN + "\nEntrance permitted for " + selectedSpot.spotName + ". Proceeding to dynamic distancing check..." + ANSI_RESET);
                 // Assuming Robot class exists and you have an instance
                 Robot defaultRobot = new Robot("20614522", "Ivan Char Cheng Jun"); 
@@ -217,7 +217,7 @@ public class StaticDrinkServing {
             String occupancyStatus;
             String waitTimeStr; // Renamed to avoid conflict
             
-            if (spot.canEnter()) {
+            if (spot.currentOccupancy < spot.maxCapacity) {
                 // Room is available
                 occupancyStatus = String.format("%s%d/%d%s", ANSI_GREEN, spot.currentOccupancy, spot.maxCapacity, ANSI_RESET);
                 waitTimeStr = ANSI_GREEN + "No wait" + ANSI_RESET;
