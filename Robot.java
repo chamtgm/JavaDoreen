@@ -1,23 +1,31 @@
 public class Robot {
     private String id;
     private String name;
-    private int priorityLevel; // 1-5, with 5 being highest priority
-    private boolean hasEmergencyOverride;
-    
-    public Robot(String id, String name, int priorityLevel, boolean hasEmergencyOverride) {
+    private int priorityLevel;
+    private boolean isActive;
+
+    private static final String ANSI_RESET = "\u001B[0m";
+    private static final String ANSI_BLUE = "\u001B[34m";
+
+    // Constructor
+    public Robot(String id, String name) {
         this.id = id;
         this.name = name;
-        this.priorityLevel = priorityLevel;
-        this.hasEmergencyOverride = hasEmergencyOverride;
     }
-    
-    public boolean canBypassQueue() {
-        return priorityLevel >= 4 || hasEmergencyOverride;
+
+    // Getters
+    public String getId() {
+        return id;
     }
-    
-    // Getters and setters
-    public String getId() { return id; }
-    public String getName() { return name; }
-    public int getPriorityLevel() { return priorityLevel; }
-    public boolean hasEmergencyOverride() { return hasEmergencyOverride; }
+
+    public String getName() {
+        return name;
+    }
+
+    // Method to display robot details
+    public void displayDetails() {
+        System.out.println("\n" + ANSI_BLUE + "=== ROBOT DETAILS ===" + ANSI_RESET);
+        System.out.println("Robot ID: " + id);
+        System.out.println("Robot Name: " + name);
+    }
 }

@@ -25,38 +25,35 @@ public class DynamicDrinkServing {
 
     public static void checkDynamicDistancing(Robot robot) {
         Scanner scanner = new Scanner(System.in);
-        
+    
         System.out.println("\n" + ANSI_BLUE + "=== DYNAMIC DISTANCING CHECK ===" + ANSI_RESET);
         System.out.println("Please enter the distance (in meters) from people in four directions:");
-        
+    
         // Display visual robot position
         System.out.println("\n                 " + ANSI_YELLOW + "[Up]" + ANSI_RESET);
         System.out.println("\n");
         System.out.println(ANSI_YELLOW + "[Left]" + ANSI_RESET + "           " + ANSI_GREEN + "[R]" + ANSI_RESET + "           " + ANSI_YELLOW + "[Right]" + ANSI_RESET);
         System.out.println("\n");
         System.out.println("                " + ANSI_YELLOW + "[Down]" + ANSI_RESET);
-        
-        // Get front/up distance
+    
+        // Get distances
         System.out.print("\nUp distance: ");
         double front = scanner.nextDouble();
-        
-        // Get left distance
+    
         System.out.print("Left distance: ");
         double left = scanner.nextDouble();
-        
-        // Get right distance
+    
         System.out.print("Right distance: ");
         double right = scanner.nextDouble();
-        
-        // Get back/down distance
+    
         System.out.print("Down distance: ");
         double back = scanner.nextDouble();
-
+    
         if (left < 0 || right < 0 || front < 0 || back < 0) {
             System.out.println(ANSI_RED + "Error: Distances cannot be negative." + ANSI_RESET);
             return;
         }
-
+    
         // Display the distances in the visual format
         System.out.println("\nDistances entered:");
         System.out.println("\n             " + formatDistance(front) + " m");
@@ -64,34 +61,33 @@ public class DynamicDrinkServing {
         System.out.println(formatDistance(left) + " m        " + ANSI_GREEN + "[R]" + ANSI_RESET + "        " + formatDistance(right) + " m");
         System.out.println("\n");
         System.out.println("             " + formatDistance(back) + " m");
-
+    
         if (left >= 1 && right >= 1 && front >= 1 && back >= 1) {
             System.out.println(ANSI_GREEN + "\nYou are safe in dynamic distancing!" + ANSI_RESET);
         } else {
             System.out.println(ANSI_RED + "\nAlert! Contact detected. The robot must adjust its position." + ANSI_RESET);
-
+    
             // Call suggestion method that returns the recommended movement direction
             String movementDirection = suggestMovement(left, right, front, back);
-            
+    
             // Show movement visualization
             displayMovementArrow(movementDirection);
-
-            // Print robot details ONLY ONCE after processing all distances
-            System.out.println("\nRobot Contact Details");
-            System.out.println("Robot ID: " + robot.getId() + ", Robot Name: " + robot.getName() + 
-                              ", Priority Level: " + robot.getPriorityLevel());
-
+    
+            // Display robot details using the Robot class
+            robot.displayDetails();
+    
             // Format the date and time
             String formattedDate = LocalDate.now().toString();
             String formattedTime = LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss"));
-            
+    
             System.out.println("Date: " + formattedDate + ", Time: " + formattedTime);
         }
-    }
     
-    // Overload for backward compatibility
-    public static void checkDynamicDistancing() {
-        checkDynamicDistancing(new Robot("20614522", "Ivan Char Cheng Jun", 3, false));
+        // Regenerate random occupancy and recalculate wait times
+        System.out.println("\n" + ANSI_BLUE + "=== RELOADING SPOTS ===" + ANSI_RESET);
+        for (RestrictedSpots spot : StaticDrinkServing.spots) {
+            spot.regenerateOccupancy(); // Regenerate random occupancy
+        }
     }
     
     // Helper method to format and color the distance based on safety

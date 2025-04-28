@@ -13,15 +13,11 @@ public class RestrictedSpots {
 
     /**
      * Updates the size (area) of the spot and recalculates its maximum capacity.
-     * Does not adjust current occupancy, allowing for overflow scenarios.
      * @param newArea The new area of the spot in square meters.
      */
-    public void updateSpotSize(double newArea){
+    public void updateSpotSize(double newArea) {
         this.spotArea = newArea;
-        this.maxCapacity = (int) (spotArea/1.0); // Recalculate the max capacity based on new area
-        
-        // We no longer automatically reduce occupancy to match max capacity
-        // This allows for overflow calculations
+        this.maxCapacity = (int) (spotArea / 1.0); // Recalculate the max capacity based on new area
     }
 
     /**
@@ -39,14 +35,19 @@ public class RestrictedSpots {
         this.spotArea = area;
         this.avgTime = time;
         this.maxCapacity = (int) (spotArea / 1.0); // Assuming 1 meter² per person for social distancing
-        
-        // Modified line - add 25 to the original area before calculating random occupancy limit
-        // This allows simulating scenarios where the spot might be temporarily over capacity.
+
+        // Calculate the original random occupancy limit
         int randomOccupancyLimit = (int) ((spotArea + 30) / 1.0);
-        
-        // Note: We're not limiting to maxCapacity here to allow for overflow scenarios
-        // Generate random occupancy between 0 and randomOccupancyLimit
-        this.currentOccupancy = new Random().nextInt(randomOccupancyLimit + 1);
+
+        // Generate a random sign (+1 or -1) and a random value (1-10)
+        int randomSign = RandomModifier.getRandomSign();
+        int randomValue = RandomModifier.getRandomValue();
+
+        // Adjust the randomOccupancyLimit
+        randomOccupancyLimit += randomSign * randomValue;
+
+        // Generate random occupancy between 0 and the adjusted randomOccupancyLimit
+        this.currentOccupancy = new Random().nextInt(Math.max(1, randomOccupancyLimit + 1));
     }
 
     /**
@@ -90,5 +91,22 @@ public class RestrictedSpots {
         if (!canEnter()) {
             System.out.println("Estimated Wait Time: " + getEstimatedWaitTime() + " minutes");
         }
+    }
+
+    /**
+     * Regenerates the random occupancy for the spot.
+     */
+    public void regenerateOccupancy() {
+        int randomOccupancyLimit = (int) ((spotArea + 30) / 1.0);
+
+        // Generate a random sign (+1 or -1) and a random value (1-10)
+        int randomSign = RandomModifier.getRandomSign();
+        int randomValue = RandomModifier.getRandomValue();
+
+        // Adjust the randomOccupancyLimit
+        randomOccupancyLimit += randomSign * randomValue;
+
+        // Generate random occupancy between 0 and the adjusted randomOccupancyLimit
+        this.currentOccupancy = new Random().nextInt(Math.max(1, randomOccupancyLimit + 1));
     }
 }
