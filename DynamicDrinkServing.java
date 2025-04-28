@@ -260,7 +260,7 @@ public class DynamicDrinkServing {
                                       recommendedDirection = "UP_RIGHT";
                 }
             } 
-            else if (rightSafe && downSafe) { // rightSafe && downSafe
+            else if (rightSafe && downSafe) {
                 if (right == 1 || down == 1) {
                     System.out.println("Current position has reached maximum possible distance. Moving would reduce overall safety.");
                     recommendedDirection = "NONE";
