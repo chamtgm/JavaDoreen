@@ -29,10 +29,11 @@ public class RestrictedSpots {
      * @param area The area of the spot in square meters.
      * @param time The average time a person spends in the spot, in minutes.
      */
-    public RestrictedSpots(String id, String name, double area) {
+    public RestrictedSpots(String id, String name, double area, int time) {
         this.spotID = id;
         this.spotName = name;
         this.spotArea = area;
+        this.avgTime = time;
         this.maxCapacity = (int) (spotArea / 1.0); // Assuming 1 meter² per person for social distancing
 
         // Calculate the original random occupancy limit
@@ -67,7 +68,7 @@ public class RestrictedSpots {
     public int getEstimatedWaitTime() {
         if (currentOccupancy >= maxCapacity) {
             // Calculate wait time based on average time per person
-            return (currentOccupancy - maxCapacity + 1);
+            return avgTime* (currentOccupancy - maxCapacity + 1);
         }
         else {
             return 0; // No wait time if the room is not full
