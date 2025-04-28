@@ -1,5 +1,9 @@
 import java.util.Random;
 
+/**
+ * Represents a restricted dining spot with capacity limits and occupancy tracking.
+ * Calculates wait times based on current occupancy and average time spent per person.
+ */
 public class RestrictedSpots {
     public String spotID, spotName;
     double spotArea;  // in square meters
@@ -7,6 +11,11 @@ public class RestrictedSpots {
     int currentOccupancy;
     int avgTime; // in minutes
 
+    /**
+     * Updates the size (area) of the spot and recalculates its maximum capacity.
+     * Does not adjust current occupancy, allowing for overflow scenarios.
+     * @param newArea The new area of the spot in square meters.
+     */
     public void updateSpotSize(double newArea){
         this.spotArea = newArea;
         this.maxCapacity = (int) (spotArea/1.0); // Recalculate the max capacity based on new area
@@ -15,6 +24,15 @@ public class RestrictedSpots {
         // This allows for overflow calculations
     }
 
+    /**
+     * Constructs a new RestrictedSpots object.
+     * Initializes spot details, calculates initial max capacity based on area,
+     * and sets a random initial occupancy, potentially exceeding max capacity.
+     * @param id The unique identifier for the spot.
+     * @param name The name of the spot.
+     * @param area The area of the spot in square meters.
+     * @param time The average time a person spends in the spot, in minutes.
+     */
     public RestrictedSpots(String id, String name, double area, int time) {
         this.spotID = id;
         this.spotName = name;
@@ -22,19 +40,30 @@ public class RestrictedSpots {
         this.avgTime = time;
         this.maxCapacity = (int) (spotArea / 1.0); // Assuming 1 meter² per person for social distancing
         
-        // Modified line - add 50 to the original area before calculating random occupancy
-        int randomOccupancyLimit = (int) ((spotArea + 25) / 1.0);
+        // Modified line - add 25 to the original area before calculating random occupancy limit
+        // This allows simulating scenarios where the spot might be temporarily over capacity.
+        int randomOccupancyLimit = (int) ((spotArea + 30) / 1.0);
         
         // Note: We're not limiting to maxCapacity here to allow for overflow scenarios
         // Generate random occupancy between 0 and randomOccupancyLimit
         this.currentOccupancy = new Random().nextInt(randomOccupancyLimit + 1);
     }
 
+    /**
+     * Checks if the spot has space for entry based on current occupancy and max capacity.
+     * @return true if current occupancy is less than max capacity, false otherwise.
+     */
     public boolean canEnter() {
         return currentOccupancy < maxCapacity;
     }
     
-    // Add method to get wait time estimate
+    /**
+     * Calculates the estimated wait time in minutes if the spot is full.
+     * If the spot is not full, returns 0.
+     * The wait time is based on the number of people exceeding capacity (overflow)
+     * and the average time spent per person. A minimum wait time of 5 minutes is enforced.
+     * @return The estimated wait time in minutes, or 0 if entry is possible.
+     */
     public int getEstimatedWaitTime() {
         if (canEnter()) return 0;
         
@@ -42,12 +71,17 @@ public class RestrictedSpots {
         int overflow = currentOccupancy - maxCapacity + 1; // +1 to account for the robot wanting to enter
         
         // Formula: (overflow / maxCapacity) * avgTime gives proportional wait time
+        // Uses Math.ceil to round up, ensuring a full time unit.
         int waitEstimate = (int) Math.ceil((double) overflow * avgTime / maxCapacity);
         
         // Ensure a minimum reasonable wait time
         return Math.max(waitEstimate, 5);
     }
 
+    /**
+     * Displays the detailed information about the spot, including ID, name, area,
+     * capacity, current occupancy, and estimated wait time if applicable.
+     */
     public void displayInfo() {
         System.out.println("\nSpot ID: " + spotID + ", Name: " + spotName);
         System.out.println("Spot Area: " + spotArea + " m², Max Capacity: " + maxCapacity);

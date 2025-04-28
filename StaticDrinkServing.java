@@ -1,4 +1,6 @@
 import java.util.Scanner;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class StaticDrinkServing {
 
@@ -9,6 +11,9 @@ public class StaticDrinkServing {
     private static final String ANSI_GREEN ="\u001B[0;32m";
     private static final String ANSI_BLUE = "\u001B[34m";
 
+    // Pattern to match ANSI escape codes
+    private static final Pattern ANSI_PATTERN = Pattern.compile("\u001B\\[[;\\d]*m");
+
     private static Scanner scanner = new Scanner(System.in);
     public static RestrictedSpots[] spots = {
         new RestrictedSpots("S1", "Dining Foyer", 120, 30),
@@ -18,6 +23,22 @@ public class StaticDrinkServing {
         new RestrictedSpots("S5", "Family Dining Room", 250, 60)
     };
 
+    // Helper function to get the visible length of a string (stripping ANSI codes)
+    private static int getVisibleLength(String str) {
+        if (str == null) {
+            return 0;
+        }
+        return ANSI_PATTERN.matcher(str).replaceAll("").length();
+    }
+
+    // Helper function to create a padded string, accounting for ANSI codes
+    private static String padRight(String str, int visibleWidth) {
+        int visibleLength = getVisibleLength(str);
+        int paddingNeeded = Math.max(0, visibleWidth - visibleLength);
+        return str + " ".repeat(paddingNeeded);
+    }
+
+
     public static void main(String[] args) {
         System.out.println(ANSI_BLUE + "Welcome to the Drink Serving Robotic System!" + ANSI_RESET);
         
@@ -25,8 +46,8 @@ public class StaticDrinkServing {
         configureRoomSizes();
         
         while (true) {
-            displayAvailableSpots();
-            suggestEntrySequence(); // Add this line here
+            displayAvailableSpots(); // Display current status first
+            suggestEntrySequence(); // Then display the suggestion
             System.out.print("\nSelect a spot (1-5) or 0 to exit: ");
             
             if (!scanner.hasNextInt()) { 
@@ -44,15 +65,18 @@ public class StaticDrinkServing {
             }
 
             RestrictedSpots selectedSpot = spots[choice - 1];
-            selectedSpot.displayInfo();
+            // No need to display info here again, as it's shown in the table
+            // selectedSpot.displayInfo(); 
 
             if (selectedSpot.canEnter()) {
-                System.out.println(ANSI_GREEN + "Entrance permitted. Proceeding to dynamic distancing check..." + ANSI_RESET);
-                DynamicDrinkServing.checkDynamicDistancing();
+                System.out.println(ANSI_GREEN + "\nEntrance permitted for " + selectedSpot.spotName + ". Proceeding to dynamic distancing check..." + ANSI_RESET);
+                // Assuming Robot class exists and you have an instance
+                Robot defaultRobot = new Robot("R001", "DefaultBot", 3, false); 
+                DynamicDrinkServing.checkDynamicDistancing(defaultRobot); // Pass robot instance
             } else {
                 // Use the getEstimatedWaitTime method for consistency
                 int simpleWaitTime = selectedSpot.getEstimatedWaitTime();
-                System.out.println(ANSI_ORANGE + "Spot is full! Estimated wait time: " + simpleWaitTime + " minutes." + ANSI_RESET);
+                System.out.println(ANSI_ORANGE + "\n" + selectedSpot.spotName + " is full! Estimated wait time: " + simpleWaitTime + " minutes." + ANSI_RESET);
                 
                 String waitChoice;
                 while (true) {
@@ -60,8 +84,10 @@ public class StaticDrinkServing {
                     waitChoice = scanner.next().toLowerCase();
 
                     if (waitChoice.equals("yes")) {
-                        System.out.println(ANSI_ORANGE + "Robot is now allowed to enter after waiting " + simpleWaitTime + " minutes." + ANSI_RESET);
-                        DynamicDrinkServing.checkDynamicDistancing();
+                        System.out.println(ANSI_ORANGE + "Robot is now allowed to enter " + selectedSpot.spotName + " after waiting " + simpleWaitTime + " minutes." + ANSI_RESET);
+                         // Assuming Robot class exists and you have an instance
+                        Robot defaultRobot = new Robot("R001", "DefaultBot", 3, false);
+                        DynamicDrinkServing.checkDynamicDistancing(defaultRobot); // Pass robot instance
                         break;
                     } else if (waitChoice.equals("no")) {
                         System.out.println("Select another spot.");
@@ -135,60 +161,82 @@ public class StaticDrinkServing {
     }
     
     private static void displayRoomSizesTable() {
-        System.out.println("\n" + ANSI_BLUE + "╔════════════════════════════════════════════════╗");
+        // Define column widths (visible characters)
+        int numWidth = 3;
+        int idWidth = 7;
+        int nameWidth = 18;
+        int areaWidth = 9;
+
+        System.out.println("\n" + ANSI_BLUE + "╔═════╦═════════╦════════════════════╦═══════════╗");
         System.out.println("║             AVAILABLE DINING SPOTS             ║");
-        System.out.println("╠═════╦═════════╦════════════════════╦═══════════╣");
-        System.out.println("║  #  ║ Spot ID ║        Name        ║   Area    ║");
+        System.out.println("╠═════╬═════════╬════════════════════╬═══════════╣");
+        System.out.printf("║ %-" + numWidth + "s ║ %-" + idWidth + "s ║ %-" + nameWidth + "s ║ %-" + areaWidth + "s ║\n", "#", "Spot ID", "Name", "Area");
         System.out.println("╠═════╬═════════╬════════════════════╬═══════════╣" + ANSI_RESET);
         
         for (int i = 0; i < spots.length; i++) {
             RestrictedSpots spot = spots[i];
-            System.out.printf("  %2d      %-3s     %-19s   %5.1f m² \n", 
-                             (i + 1), 
-                             spot.spotID, 
-                             spot.spotName, 
-                             spot.spotArea);
+            String areaStr = String.format("%.1f m²", spot.spotArea);
+            // Use padRight for consistent formatting
+            System.out.printf("║ %s ║ %s ║ %s ║ %s ║\n", 
+                             padRight(String.valueOf(i + 1), numWidth), 
+                             padRight(spot.spotID, idWidth), 
+                             padRight(spot.spotName, nameWidth), 
+                             padRight(areaStr, areaWidth));
         }
         
         System.out.println(ANSI_BLUE + "╚═════╩═════════╩════════════════════╩═══════════╝" + ANSI_RESET);
     }
     
     private static void displayAvailableSpots() {
-        // Display the table first
-        displayRoomSizesTable();
-        
-        // Then show occupancy information with wait time calculation
-        System.out.println("\nCurrent Occupancy Status:");
+        // Define column widths (visible characters)
+        int numWidth = 3;
+        int nameWidth = 21;
+        int occupancyWidth = 14; // e.g., "XXX/XXX" or "FULL"
+        int waitTimeWidth = 19; // e.g., "No wait" or "XX minutes"
+
+        // Display the table header
+        System.out.println("\n" + ANSI_BLUE + "=== CURRENT OCCUPANCY STATUS ===" + ANSI_RESET);
+        System.out.println(ANSI_BLUE + "╔═════╦═══════════════════════╦════════════════╦═════════════════════╗");
+        System.out.printf("║ %-" + numWidth + "s ║ %-" + nameWidth + "s ║ %-" + occupancyWidth + "s ║ %-" + waitTimeWidth + "s ║\n", "#", "Name", "Occupancy", "Wait Time");
+        System.out.println("╠═════╬═══════════════════════╬════════════════╬═════════════════════╣" + ANSI_RESET);
+
+        // Then show occupancy information with wait time calculation in table format
         for (int i = 0; i < spots.length; i++) {
             RestrictedSpots spot = spots[i];
+            String occupancyStatus;
+            String waitTimeStr; // Renamed to avoid conflict
             
             if (spot.canEnter()) {
                 // Room is available
-                System.out.printf("%d. %s - %s\n", 
-                    (i + 1), 
-                    spot.spotName, 
-                    ANSI_GREEN + "AVAILABLE (" + spot.currentOccupancy + "/" + spot.maxCapacity + ")" + ANSI_RESET);
+                occupancyStatus = String.format("%s%d/%d%s", ANSI_GREEN, spot.currentOccupancy, spot.maxCapacity, ANSI_RESET);
+                waitTimeStr = ANSI_GREEN + "No wait" + ANSI_RESET;
             } else {
-                // Use the same getEstimatedWaitTime method for consistency
-                int waitTime = spot.getEstimatedWaitTime();
+                // Room is full or over capacity
+                // Option 2: Show max/max when full
+                occupancyStatus = String.format("%s%d/%d%s", ANSI_RED, spot.maxCapacity, spot.maxCapacity, ANSI_RESET); 
                 
-                // For display purposes, show equal values for current and max occupancy
-                System.out.printf("%d. %s - %s %s\n", 
-                    (i + 1), 
-                    spot.spotName, 
-                    ANSI_RED + "FULL (" + spot.maxCapacity + "/" + spot.maxCapacity + ")" + ANSI_RESET,
-                    ANSI_ORANGE + "Est. Wait: " + waitTime + " min" + ANSI_RESET);
+                int waitTimeValue = spot.getEstimatedWaitTime();
+                waitTimeStr = ANSI_ORANGE + waitTimeValue + " minutes" + ANSI_RESET;
             }
+            
+            // Use padRight helper for consistent padding regardless of ANSI codes
+            System.out.printf("║ %s ║ %s ║ %s ║ %s ║\n", 
+                             padRight(String.valueOf(i + 1), numWidth), 
+                             padRight(spot.spotName, nameWidth), 
+                             padRight(occupancyStatus, occupancyWidth),
+                             padRight(waitTimeStr, waitTimeWidth));
         }
+        // Display the table footer
+        System.out.println(ANSI_BLUE + "╚═════╩═══════════════════════╩════════════════╩═════════════════════╝" + ANSI_RESET);
     }
     
     private static void suggestEntrySequence() {
-        System.out.println("\n" + ANSI_BLUE + "=== SUGGESTED ENTRY SEQUENCE ===" + ANSI_RESET);
+        System.out.println("\n" + ANSI_BLUE + "--- SUGGESTED ENTRY SEQUENCE ---" + ANSI_RESET); // Changed header style
         
         // Create a copy of spots array to sort without modifying original
         RestrictedSpots[] sortedSpots = spots.clone();
         
-        // Sort spots by availability first, then by wait time
+        // Sort spots by availability first, then by wait time (Bubble Sort)
         for (int i = 0; i < sortedSpots.length - 1; i++) {
             for (int j = 0; j < sortedSpots.length - i - 1; j++) {
                 // Get availability status
@@ -199,18 +247,17 @@ public class StaticDrinkServing {
                 int waitTime1 = spot1Available ? 0 : sortedSpots[j].getEstimatedWaitTime();
                 int waitTime2 = spot2Available ? 0 : sortedSpots[j+1].getEstimatedWaitTime();
                 
-                // First sort by availability (available rooms first)
-                if (spot1Available && !spot2Available) {
-                    // Keep spot1 before spot2, do nothing
-                    continue;
-                } else if (!spot1Available && spot2Available) {
-                    // Swap to put available spot first
-                    RestrictedSpots temp = sortedSpots[j];
-                    sortedSpots[j] = sortedSpots[j+1];
-                    sortedSpots[j+1] = temp;
+                boolean swap = false;
+                // Condition 1: Spot 1 is full, Spot 2 is available -> Swap
+                if (!spot1Available && spot2Available) {
+                    swap = true;
                 } 
-                // If both have same availability status, sort by wait time
-                else if (waitTime1 > waitTime2) {
+                // Condition 2: Both have same availability, but Spot 1 has longer wait time -> Swap
+                else if (spot1Available == spot2Available && waitTime1 > waitTime2) {
+                     swap = true;
+                }
+
+                if (swap) {
                     RestrictedSpots temp = sortedSpots[j];
                     sortedSpots[j] = sortedSpots[j+1];
                     sortedSpots[j+1] = temp;
@@ -218,36 +265,30 @@ public class StaticDrinkServing {
             }
         }
         
-        // Display the sorted rooms
-        System.out.println("Based on current occupancy, here's the recommended sequence to visit rooms:");
-        System.out.println("\n" + ANSI_BLUE + "╔═══════════════════════════════════════════════════════════════╗");
-        System.out.println("║                     ROOM ENTRY SUGGESTION                     ║");
-        System.out.println("╠═════╦═══════════════════════╦═══════════╦═════════════════════╣");
-        System.out.println("║ Seq ║         Name          ║   Status  ║     Wait Time       ║");
-        System.out.println("╠═════╬═══════════════════════╬═══════════╬═════════════════════╣" + ANSI_RESET);
+        // Display the sorted rooms as a numbered list
+        System.out.println("Based on current occupancy, here's the recommended sequence:");
         
         for (int i = 0; i < sortedSpots.length; i++) {
             RestrictedSpots spot = sortedSpots[i];
             String status;
-            String waitTime;
+            String waitTimeInfo; // Renamed
             
             if (spot.canEnter()) {
                 status = ANSI_GREEN + "AVAILABLE" + ANSI_RESET;
-                waitTime = ANSI_GREEN + "No wait" + ANSI_RESET;
+                waitTimeInfo = "(" + ANSI_GREEN + "No wait" + ANSI_RESET + ")";
             } else {
                 status = ANSI_RED + "FULL" + ANSI_RESET;
-                // Use the same method as in displayAvailableSpots
                 int waitTimeValue = spot.getEstimatedWaitTime();
-                waitTime = ANSI_ORANGE + waitTimeValue + " minutes" + ANSI_RESET;
+                waitTimeInfo = "(Wait: " + ANSI_ORANGE + waitTimeValue + " minutes" + ANSI_RESET + ")";
             }
             
-            System.out.printf("   %d    %-21s   %-24s   %-19s\n", 
+            // Print as a numbered list item
+            System.out.printf("%d. %-21s: %s %s\n", 
                             (i + 1), 
                             spot.spotName, 
                             status,
-                            waitTime);
+                            waitTimeInfo);
         }
-        
-        System.out.println(ANSI_BLUE + "╚═════╩═══════════════════════╩═══════════╩═════════════════════╝" + ANSI_RESET);
+        System.out.println(ANSI_BLUE + "----------------------------------" + ANSI_RESET); // Footer line
     }
 }
