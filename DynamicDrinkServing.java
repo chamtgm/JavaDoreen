@@ -13,14 +13,15 @@ public class DynamicDrinkServing {
     private static final String ANSI_YELLOW = "\u001B[33m";
 
     // Add new constants for arrow characters
-    private static final String ARROW_UP = "↑";
-    private static final String ARROW_DOWN = "↓";
-    private static final String ARROW_LEFT = "←";
-    private static final String ARROW_RIGHT = "→";
-    private static final String ARROW_UP_RIGHT = "↗";
-    private static final String ARROW_UP_LEFT = "↖";
-    private static final String ARROW_DOWN_RIGHT = "↘";
-    private static final String ARROW_DOWN_LEFT = "↙";
+    public static final String ARROW_UP = "^";      // ↑
+    public static final String ARROW_DOWN = "v";    // ↓
+    public static final String ARROW_LEFT = "<-";    // ←
+    public static final String ARROW_RIGHT = "->";   // →
+    
+    public static final String ARROW_UP_RIGHT = "/^";   // ↗
+    public static final String ARROW_UP_LEFT = "^\\";    // ↖
+    public static final String ARROW_DOWN_RIGHT = "\\v"; // ↘
+    public static final String ARROW_DOWN_LEFT = "v/";  // ↙
 
     public static void checkDynamicDistancing(Robot robot) {
         Scanner scanner = new Scanner(System.in);
@@ -67,7 +68,7 @@ public class DynamicDrinkServing {
         if (left >= 1 && right >= 1 && front >= 1 && back >= 1) {
             System.out.println(ANSI_GREEN + "\nYou are safe in dynamic distancing!" + ANSI_RESET);
         } else {
-            System.out.println(ANSI_RED + "\nAlert! Close contact detected. The robot must adjust its position." + ANSI_RESET);
+            System.out.println(ANSI_RED + "\nAlert! Contact detected. The robot must adjust its position." + ANSI_RESET);
 
             // Call suggestion method that returns the recommended movement direction
             String movementDirection = suggestMovement(left, right, front, back);
@@ -110,14 +111,8 @@ public class DynamicDrinkServing {
 
     // Updated method that returns the movement direction
     private static String suggestMovement(double left, double right, double up, double down) {
-        // First, check if all directions are safe (≥ 1m)
-        if (left >= 1 && right >= 1 && up >= 1 && down >= 1) {
-            System.out.println(ANSI_GREEN + "All directions are safe. No movement needed." + ANSI_RESET);
-            return "NONE";
-        }
-        
         String recommendedDirection = "NONE";
-        
+
         // Check individual directions and keep track of safe directions
         boolean leftSafe = left >= 1;
         boolean rightSafe = right >= 1;
@@ -127,281 +122,216 @@ public class DynamicDrinkServing {
         // Count safe directions
         int safeDirectionCount = (leftSafe ? 1 : 0) + (rightSafe ? 1 : 0) + 
                                  (upSafe ? 1 : 0) + (downSafe ? 1 : 0);
-        
+
         System.out.println("Safe directions: " + safeDirectionCount + " out of 4");
-        
-        // CASE 1: Special case for left-right balancing when up-down are safe
-        if (upSafe && downSafe && !leftSafe && !rightSafe) {
-            System.out.println(ANSI_YELLOW + "Both vertical directions are safe, but horizontal directions need adjustment." + ANSI_RESET);
-            
-            // Calculate the midpoint or balance point between left and right
-            double totalHorizontalSpace = left + right;
-            double currentLeftRatio = left / totalHorizontalSpace;
-            
-            // Check if there's an opportunity for diagonal optimization by using extra vertical space
-            boolean verticalImbalance = Math.abs(up - down) > 0.3; // Check if there's significant difference between up and down
-            
-            // If vertical directions have imbalanced safe spaces, consider diagonal movement
-            if (verticalImbalance) {
-                // Determine which vertical direction has more space
-                boolean upHasMoreSpace = up > down;
-                
-                // Determine which horizontal direction has less space (needs improvement)
-                boolean leftHasLessSpace = left < right;
-                
-                // Determine optimal diagonal based on which sides have more/less space
-                String diagonalDirection = "";
-                
-                if (upHasMoreSpace && leftHasLessSpace) {
-                    diagonalDirection = "UP_RIGHT";
-                    System.out.println(ANSI_YELLOW + "\nDiagonal optimization opportunity detected!" + ANSI_RESET);
-                    System.out.println("Moving diagonally UP_RIGHT will utilize extra upward space while improving right distance.");
-                    System.out.println("Moving 0.1m up and 0.2m right creates better balance and maximizes safe distances.");
-                    return diagonalDirection;
-                } else if (upHasMoreSpace && !leftHasLessSpace) {
-                    diagonalDirection = "UP_LEFT";
-                    System.out.println(ANSI_YELLOW + "\nDiagonal optimization opportunity detected!" + ANSI_RESET);
-                    System.out.println("Moving diagonally UP_LEFT will utilize extra upward space while improving left distance.");
-                    System.out.println("Moving 0.1m up and 0.2m left creates better balance and maximizes safe distances.");
-                    return diagonalDirection;
-                } else if (!upHasMoreSpace && leftHasLessSpace) {
-                    diagonalDirection = "DOWN_RIGHT";
-                    System.out.println(ANSI_YELLOW + "\nDiagonal optimization opportunity detected!" + ANSI_RESET);
-                    System.out.println("Moving diagonally DOWN_RIGHT will utilize extra downward space while improving right distance.");
-                    System.out.println("Moving 0.1m down and 0.2m right creates better balance and maximizes safe distances.");
-                    return diagonalDirection;
-                } else if (!upHasMoreSpace && !leftHasLessSpace) {
-                    diagonalDirection = "DOWN_LEFT";
-                    System.out.println(ANSI_YELLOW + "\nDiagonal optimization opportunity detected!" + ANSI_RESET);
-                    System.out.println("Moving diagonally DOWN_LEFT will utilize extra downward space while improving left distance.");
-                    System.out.println("Moving 0.1m down and 0.2m left creates better balance and maximizes safe distances.");
-                    return diagonalDirection;
-                }
-            }
-            
-            // Continue with original horizontal balancing code if no diagonal optimization is applicable
-            // Calculate how far to move...
-            double moveDistance;
-            String moveDirection;
-            
-            // Rest of your existing code for horizontal balancing
-            // ...
-        }
-        
-        // CASE 2: Special case for up-down balancing when left-right are safe
-        if (leftSafe && rightSafe && !upSafe && !downSafe) {
-            System.out.println(ANSI_YELLOW + "Both horizontal directions are safe, but vertical directions need adjustment." + ANSI_RESET);
-            
-            // Calculate the midpoint or balance point between up and down
-            double totalVerticalSpace = up + down;
-            double currentUpRatio = up / totalVerticalSpace;
-            
-            // Calculate how far to move
-            double moveDistance;
-            String moveDirection;
-            
-            // If current position is already balanced (45-55% on each side)
-            if (currentUpRatio >= 0.45 && currentUpRatio <= 0.55) {
-                System.out.println("Current position is adequately balanced between up and down obstacles.");
-                moveDirection = "NONE";
-                moveDistance = 0;
-            }
-            // If up distance is significantly smaller than down, move down
-            else if (up < down) {
-                moveDirection = "DOWN";
-                // Move enough to achieve better balance, but not necessarily perfect safety
-                moveDistance = Math.min(0.5, (down - up) / 2);
-                System.out.println("Up space (" + String.format("%.2f", up) + "m) is smaller than down space (" + 
-                    String.format("%.2f", down) + "m).");
-            } 
-            // If down distance is significantly smaller than up, move up
-            else {
-                moveDirection = "UP";
-                // Move enough to achieve better balance, but not necessarily perfect safety
-                moveDistance = Math.min(0.5, (up - down) / 2);
-                System.out.println("Down space (" + String.format("%.2f", down) + "m) is smaller than up space (" + 
-                    String.format("%.2f", up) + "m).");
-            }
-            
-            if (!moveDirection.equals("NONE")) {
-                System.out.println("Moving " + String.format("%.2f", moveDistance) + "m " + 
-                    moveDirection.toLowerCase() + " to achieve a better balanced position.");
-                System.out.println("This will result in approximately " + 
-                    String.format("%.2f", (moveDirection.equals("UP") ? up - moveDistance : up + moveDistance)) + "m up and " + 
-                    String.format("%.2f", (moveDirection.equals("DOWN") ? down - moveDistance : down + moveDistance)) + "m down.");
-                
-                recommendedDirection = moveDirection;
-            }
-            
-            return recommendedDirection;
+
+        // First, check if all directions are safe (≥ 1m)
+        if (safeDirectionCount == 4) {
+            System.out.println(ANSI_GREEN + "All directions are safe. No movement needed." + ANSI_RESET);
+            recommendedDirection = "NONE";
         }
         
         // Case: Three directions are safe, one is unsafe - move to balance rather than reach safety threshold
-        if (safeDirectionCount == 3) {
+        else if (safeDirectionCount == 3) {
+            // Check which direction is unsafe
             if (!leftSafe) {
                 printContactType("Left", left);
-                // Calculate optimal movement to balance distances rather than just reaching safety
-                double idealPosition = (left + right) / 2;
-                double moveDistance = Math.min(1.0 - left, (right - left) / 2);
-                System.out.println("Move " + String.format("%.2f", moveDistance) + "m to the right for better balance.");
-                recommendedDirection = "RIGHT";
-            } else if (!rightSafe) {
+                // Check if the unsafe direction is already close to its maximum (<= 1m)
+                if (right <= 1) {
+                    System.out.println("Right is already at its maximum possible distance. Moving would reduce overall safety.");
+                    recommendedDirection = "NONE";
+                } 
+                else {
+                    // Calculate move distance to achieve better balance
+                    double moveDistance = right - 1;
+                    System.out.println("Move maximum " + String.format("%.2f", moveDistance) + 
+                                      "m to the right to maintain a safe distance on right and maximum the distance of the obstacle from left.");
+                    recommendedDirection = "RIGHT";
+                    }
+            }
+            else if (!rightSafe) {
                 printContactType("Right", right);
-                // Calculate optimal movement to balance distances rather than just reaching safety
-                double idealPosition = (left + right) / 2;
-                double moveDistance = Math.min(1.0 - right, (left - right) / 2);
-                System.out.println("Move " + String.format("%.2f", moveDistance) + "m to the left for better balance.");
-                recommendedDirection = "LEFT";
-            } else if (!upSafe) {
+                // Check if the unsafe direction is already close to its maximum (<= 1m)
+                if (left <= 1) {
+                    System.out.println("Left is already at its maximum possible distance. Moving would reduce overall safety.");
+                    recommendedDirection = "NONE";
+                } 
+                else {
+                        // Calculate move distance to achieve better balance
+                        double moveDistance = left - 1;
+                        System.out.println("Move maximum " + String.format("%.2f", moveDistance) + 
+                                          "m to the left to maintain a safe distance on left and maximum the distance of the obstacle from right.");
+                        recommendedDirection = "LEFT";
+                    }
+            }
+            else if (!upSafe) {
                 printContactType("Up", up);
-                // Calculate optimal movement to balance distances rather than just reaching safety
-                double idealPosition = (up + down) / 2;
-                double moveDistance = Math.min(1.0 - up, (down - up) / 2);
-                System.out.println("Move " + String.format("%.2f", moveDistance) + "m downward for better balance.");
-                recommendedDirection = "DOWN";
-            } else { // !downSafe
+                // Check if the unsafe direction is already close to its maximum (<= 1m)
+                if (down <= 1) {
+                    System.out.println("Backward is already at its maximum possible distance. Moving would reduce overall safety.");
+                    recommendedDirection = "NONE";
+                }
+                else {
+                        // Calculate move distance to achieve better balance
+                        double moveDistance = down - 1;
+                        System.out.println("Move maximum " + String.format("%.2f", moveDistance) + 
+                                          "m to the back to maintain a safe distance on backward and maximum the distance of the obstacle from front.");
+                        recommendedDirection = "DOWN";
+                    }
+            }
+            else { // !downSafe
                 printContactType("Down", down);
-                // Calculate optimal movement to balance distances rather than just reaching safety
-                double idealPosition = (up + down) / 2;
-                double moveDistance = Math.min(1.0 - down, (up - down) / 2);
-                System.out.println("Move " + String.format("%.2f", moveDistance) + "m upward for better balance.");
-                recommendedDirection = "UP";
+                // Check if the unsafe direction is already close to its maximum (<= 1m)
+                if (up <= 1) {
+                    System.out.println("Frontward is already at its maximum possible distance. Moving would reduce overall safety.");
+                    recommendedDirection = "NONE";
+                }
+                else {
+                        // Calculate move distance to achieve better balance
+                        double moveDistance = up - 1;
+                        System.out.println("Move maximum " + String.format("%.2f", moveDistance) + 
+                                          "m to the front to maintain a safe distance on frontward and maximum the distance of the obstacle from backward.");
+                        recommendedDirection = "UP";
+                }
             }
         }
+        
         // Case: Two directions are safe - move diagonally along the safe directions
         else if (safeDirectionCount == 2) {
-            // Horizontal and vertical directions both have one safe option
-            if ((leftSafe || rightSafe) && (upSafe || downSafe)) {
-                // Determine diagonal direction using safe directions
-                if (leftSafe && upSafe) {
-                    System.out.println("Safe directions are Left and Up - move diagonally toward them.");
-                    recommendedDirection = "UP_LEFT";
-                } else if (leftSafe && downSafe) {
-                    System.out.println("Safe directions are Left and Down - move diagonally toward them.");
-                    recommendedDirection = "DOWN_LEFT";
-                } else if (rightSafe && upSafe) {
-                    System.out.println("Safe directions are Right and Up - move diagonally toward them.");
-                    recommendedDirection = "UP_RIGHT";
-                } else { // rightSafe && downSafe
-                    System.out.println("Safe directions are Right and Down - move diagonally toward them.");
-                    recommendedDirection = "DOWN_RIGHT";
+            // Determine diagonal direction using safe directions
+            if (leftSafe && upSafe) {
+                if (left == 1 || up == 1) {
+                    System.out.println("Current position has reached maximum possible distance. Moving would reduce overall safety.");
+                    recommendedDirection = "NONE";
                 }
-                System.out.println(ANSI_GREEN + "Diagonal movement recommended using safe directions." + ANSI_RESET);
+                else {
+                    double leftMovement = left - 1;
+                    double upMovement = up - 1;
+                    System.out.println(ANSI_YELLOW + "Safe directions are Leftward and Upward - move diagonally toward them." + ANSI_RESET);
+                    System.out.println("Move minimum " + String.format("%.2f", leftMovement) + 
+                                      "m leftward and " + String.format("%.2f", upMovement) + "m upward to balance between rightward ("  + String.format("%.2f", right) + 
+                                      "m) and downward (" + String.format("%.2f", down) + "m) obstacles.");
+                                      recommendedDirection = "UP_LEFT";
+                }
             }
-            // Both safe directions are on same axis - move straight in the safer direction
-            else if (leftSafe && rightSafe) {
-                // Both horizontal directions are safe, vertical is unsafe
-                // Choose the safest vertical direction to move in
-                if (up >= down) {
-                    System.out.println("Move upward where more space is available.");
-                    recommendedDirection = "UP";
-                } else {
-                    System.out.println("Move downward where more space is available.");
-                    recommendedDirection = "DOWN";
+            else if (leftSafe && downSafe) {
+                if (left == 1 || down == 1) {
+                    System.out.println("Current position has reached maximum possible distance. Moving would reduce overall safety.");
+                    recommendedDirection = "NONE";
                 }
-            } else { // upSafe && downSafe
-                // Both vertical directions are safe, horizontal is unsafe
-                // Choose the safest horizontal direction
-                if (left >= right) {
-                    System.out.println("Move left where more space is available.");
+                else {
+                    double leftMovement = left - 1;
+                    double downMovement = down - 1;
+                    System.out.println(ANSI_YELLOW + "Safe directions are Leftward and Backward - move diagonally toward them." + ANSI_RESET);
+                    System.out.println("Move minimum " + String.format("%.2f", leftMovement) + 
+                                      "m leftward and " + String.format("%.2f", downMovement) + "m frontward to balance between rightward ("  + String.format("%.2f", right) + 
+                                      "m) and upward (" + String.format("%.2f", down) + "m) obstacles.");
+                                      recommendedDirection = "DOWN_LEFT";
+                }
+            } 
+            else if (rightSafe && upSafe) {
+                if (right == 1 || up == 1) {
+                    System.out.println("Current position has reached maximum possible distance. Moving would reduce overall safety.");
+                    recommendedDirection = "NONE";
+                }
+                else {
+                    double rightMovement = right - 1;
+                    double upMovement = up - 1;
+                    System.out.println(ANSI_YELLOW + "Safe directions are rightward and frontward - move diagonally toward them." + ANSI_RESET);
+                    System.out.println("Move minimum " + String.format("%.2f", rightMovement) + 
+                                      "m rightward and " + String.format("%.2f", upMovement) + "m frontward to balance between leftward ("  + String.format("%.2f", right) + 
+                                      "m) and backward (" + String.format("%.2f", down) + "m) obstacles.");
+                                      recommendedDirection = "UP_RIGHT";
+                }
+            } 
+            else if (rightSafe && downSafe) { // rightSafe && downSafe
+                if (right == 1 || down == 1) {
+                    System.out.println("Current position has reached maximum possible distance. Moving would reduce overall safety.");
+                    recommendedDirection = "NONE";
+                }
+                else {
+                    double rightMovement = right - 1;
+                    double downMovement = down - 1;
+                    System.out.println(ANSI_YELLOW + "Safe directions are rightward and backward - move diagonally toward them." + ANSI_RESET);
+                    System.out.println("Move minimum " + String.format("%.2f", rightMovement) + 
+                                      "m rightward and " + String.format("%.2f", downMovement) + "m backward to balance between leftward ("  + String.format("%.2f", right) + 
+                                      "m) and frontward (" + String.format("%.2f", down) + "m) obstacles.");
+                                      recommendedDirection = "DOWN_RIGHT";
+                }
+            }
+            else if (upSafe && downSafe) {
+                if (left == right) {
+                    System.out.println("Current position has reached maximum possible distance. Moving would reduce overall safety.");
+                    recommendedDirection = "NONE";
+                }
+                else if (left > right) {
+                    double leftMovement = (left - right) / 2;
+                    System.out.println("Move maximum " + String.format("%.2f", leftMovement) + 
+                    "m to the left to maintain a balance distance from left to right.");
                     recommendedDirection = "LEFT";
-                } else {
-                    System.out.println("Move right where more space is available.");
+                }
+                else {
+                    double rightMovement = (right - left) / 2;
+                    System.out.println("Move maximum " + String.format("%.2f", rightMovement) + 
+                    "m to the right to maintain a balance distance from left to right.");
                     recommendedDirection = "RIGHT";
                 }
             }
+            else if (leftSafe && rightSafe) {
+                if (up == down) {
+                    System.out.println("Current position has reached maximum possible distance. Moving would reduce overall safety.");
+                    recommendedDirection = "NONE";
+                }
+                else if (up > down) {
+                    double upMovement = (up - down) / 2;
+                    System.out.println("Move maximum " + String.format("%.2f", upMovement) + 
+                    "m to the front to maintain a balance distance from front to back.");
+                    recommendedDirection = "UP";
+                }
+                else {
+                    double downMovement = (down - up) / 2;
+                    System.out.println("Move maximum " + String.format("%.2f", downMovement) + 
+                    "m to the back to maintain a balance distance from front to back.");
+                    recommendedDirection = "DOWN";
+                }
+            }
+            else {
+                System.out.println(ANSI_RED + "Error: No safe directions available. Unable to suggest movement." + ANSI_RESET);
+            }
         }
+
         // Case: Only one direction is safe - move in that direction
         else if (safeDirectionCount == 1) {
             if (leftSafe) {
-                System.out.println("Only left direction is safe. Move that way.");
+                double leftMovement = left - 1;
+                System.out.println("Move maximum " + String.format("%.2f", leftMovement) + 
+                "m to the left to maximise the safe distance from all directions.");
                 recommendedDirection = "LEFT";
-            } else if (rightSafe) {
-                System.out.println("Only right direction is safe. Move that way.");
+            } 
+            else if (rightSafe) {
+                double rightMovement = right - 1;
+                System.out.println("Move maximum " + String.format("%.2f", rightMovement) + 
+                "m to the right to maximise the safe distance from all directions.");
                 recommendedDirection = "RIGHT";
-            } else if (upSafe) {
-                System.out.println("Only up direction is safe. Move that way.");
+            } 
+            else if (upSafe) {
+                double upMovement = up - 1;
+                System.out.println("Move maximum " + String.format("%.2f", upMovement) + 
+                "m to the front to maximise the safe distance from all directions.");
                 recommendedDirection = "UP";
-            } else { // downSafe
-                System.out.println("Only down direction is safe. Move that way.");
+            } 
+            else { // downSafe
+                double downMovement = down - 1;
+                System.out.println("Move maximum " + String.format("%.2f", downMovement) + 
+                "m to the back to maximise the safe distance from all directions.");
                 recommendedDirection = "DOWN";
             }
         }
         // Case: No directions are safe - find best escape route based on the max distance
         else {
-            System.out.println(ANSI_RED + "All directions are unsafe. Finding best escape route." + ANSI_RESET);
-            
-            // Find direction with maximum available distance
-            double maxDistance = Math.max(Math.max(left, right), Math.max(up, down));
-            
-            // Special case: When all directions have approximately equal distances
-            // (within 0.05m of each other), suggest waiting rather than arbitrary movement
-            boolean allDirectionsEqual = 
-                Math.abs(left - right) < 0.05 && 
-                Math.abs(left - up) < 0.05 && 
-                Math.abs(left - down) < 0.05;
-            
-            if (allDirectionsEqual) {
-                System.out.println(ANSI_YELLOW + "All directions have similar distances. No clear advantage to movement." + ANSI_RESET);
-                
-                // If distances are reasonable (>= 0.7m), suggest waiting in place
-                if (left >= 0.7 && right >= 0.7 && up >= 0.7 && down >= 0.7) {
-                    System.out.println("Current position has balanced distances in all directions.");
-                    System.out.println("Recommend maintaining position and monitoring nearby movements.");
-                    return "NONE"; // Special case - no movement recommended
-                }
-                // If distances are too small, still need to find best escape route
-            }
-            
-            // Continue with existing logic when there's a clear best direction or distances are too small
-            if (maxDistance == left) {
-                System.out.println("Left has the most space. Move that way.");
-                recommendedDirection = "LEFT";
-            } else if (maxDistance == right) {
-                System.out.println("Right has the most space. Move that way.");
-                recommendedDirection = "RIGHT";
-            } else if (maxDistance == up) {
-                System.out.println("Up has the most space. Move that way.");
-                recommendedDirection = "UP";
-            } else { // maxDistance == down
-                System.out.println("Down has the most space. Move that way.");
-                recommendedDirection = "DOWN";
-            }
-            
-            // Calculate how much to move to achieve safety
-            double moveDistance = 1.0 - maxDistance;
-            System.out.println("Move at least " + String.format("%.2f", moveDistance) + 
-                              "m to achieve minimum safe distance.");
+            System.out.println(ANSI_RED + "All directions are unsafe, current position has reached maximum possible distance, moving would reduce overall safety." + ANSI_RESET);
+            recommendedDirection = "NONE";
         }
-        
-        // Special case: when two adjacent directions are slightly unsafe (between 0.7 and 1.0m)
-        // and diagonal movement would better optimize the distances
-        if (recommendedDirection.equals("LEFT") || recommendedDirection.equals("RIGHT") ||
-            recommendedDirection.equals("UP") || recommendedDirection.equals("DOWN")) {
-            
-            boolean leftBorderline = left >= 0.7 && left < 1.0;
-            boolean rightBorderline = right >= 0.7 && right < 1.0;
-            boolean upBorderline = up >= 0.7 && up < 1.0;
-            boolean downBorderline = down >= 0.7 && down < 1.0;
-            
-            // NEW CONDITION: Only apply diagonal optimization if we don't have exactly one safe direction
-            // When exactly one direction is safe, it's better to move in that direction only
-            int safeCount = (leftSafe ? 1 : 0) + (rightSafe ? 1 : 0) + (upSafe ? 1 : 0) + (downSafe ? 1 : 0);
-            boolean oneSafeDirection = safeCount == 1;
-            
-            // Skip diagonal optimization if exactly one direction is safe
-            if (!oneSafeDirection) {
-                // Check for diagonal optimization opportunities
-                // ... existing code for diagonal optimization cases ...
-            }
-            
-            // Only consider diagonal movement when there's at least 2 safe directions 
-            // OR when there are 0 safe directions but multiple borderline directions
-            if (!oneSafeDirection && (leftBorderline || rightBorderline) && (upBorderline || downBorderline)) {
-                // Existing diagonal optimization code...
-            }
-        }
-        
         return recommendedDirection;
     }
 
@@ -468,36 +398,6 @@ public class DynamicDrinkServing {
         } else {
             System.out.println("\n" + ANSI_GREEN + "No movement needed. Each directions had maximise the safe distance!" + ANSI_RESET);
         }
-    }
-
-    private static void calculateOptimalMovement(String direction, double constraint1, double constraint2) {
-        // Calculate how far the robot needs to move to maintain a 1m safe distance using Pythagorean theorem
-        // The constraint is the shorter distance (less than 1m)
-        // We need to determine how far to move in the other direction to achieve a 1m hypotenuse
-        
-        // If constraint1 (the average of the unsafe directions) is very small, we need to move further
-        double moveDistance;
-        
-        if (constraint1 <= 0.3) {
-            // Very close - need to move more aggressively
-            moveDistance = 0.95; // Almost 1m to get away quickly
-        } else {
-            // Calculate using pythagorean theorem: a² + b² = c² where c = 1 (our safe distance)
-            // We know a = constraint1, and we need to find b
-            // b = √(c² - a²) = √(1² - constraint1²)
-            moveDistance = Math.sqrt(1 - constraint1 * constraint1);
-        }
-        
-        // Round to 2 decimal places for readability
-        moveDistance = Math.round(moveDistance * 100) / 100.0;
-        
-        System.out.println(ANSI_GREEN + "Recommended movement: " + ANSI_RESET + 
-            "Move " + String.format("%.2f", moveDistance) + "m " + direction.toLowerCase() + 
-            " to maintain safe distance based on constraints.");
-        
-        System.out.println("This will create a " + String.format("%.2f", 
-            Math.sqrt(constraint1*constraint1 + moveDistance*moveDistance)) + 
-            "m diagonal distance (target: 1.00m)");
     }
 
     private static void printContactType(String direction, double distance) {
