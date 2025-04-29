@@ -25,28 +25,33 @@ public class DynamicDrinkServing {
     public static final String ARROW_DOWN_RIGHT = "\\"; // ↘
     public static final String ARROW_DOWN_LEFT = "/";  // ↙
 
+    private static double getPositiveDouble(String prompt) {
+        double value = -1;
+        while (value < 0) {
+            System.out.print(prompt);
+            if (scanner.hasNextDouble()) {
+                value = scanner.nextDouble();
+                if (value < 0) {
+                    System.out.println(ANSI_RED + "Error: Distance cannot be negative. Please enter a positive value." + ANSI_RESET);
+                }
+            } else {
+                System.out.println(ANSI_RED + "Error: Invalid input. Please enter a number." + ANSI_RESET);
+                scanner.next(); // Clear invalid input
+            }
+        }
+        return value;
+    }
+
     public static void checkDynamicDistancing(Robot robot, RestrictedSpots selectedRoom) {
     
         System.out.println("\n" + ANSI_BLUE + "=== DYNAMIC DISTANCING CHECK ===" + ANSI_RESET);
         System.out.println("Please enter the distance (in meters) from people in four directions:");
     
         // Get distances
-        System.out.print("\nFront distance: ");
-        double inputUp = scanner.nextDouble();
-    
-        System.out.print("Left distance: ");
-        double inputLeft = scanner.nextDouble();
-    
-        System.out.print("Right distance: ");
-        double inputRight = scanner.nextDouble();
-    
-        System.out.print("Back distance: ");
-        double inputDown = scanner.nextDouble();
-    
-        if (inputLeft < 0 || inputRight < 0 || inputUp < 0 || inputDown < 0) {
-            System.out.println(ANSI_RED + "Error: Distances cannot be negative." + ANSI_RESET);
-            return;
-        }
+        double inputUp = getPositiveDouble("\nFront distance: ");
+        double inputLeft = getPositiveDouble("Left distance: ");
+        double inputRight = getPositiveDouble("Right distance: ");
+        double inputDown = getPositiveDouble("Back distance: ");
     
         // Display the distances in the visual format
         System.out.println("\nDistances entered:");

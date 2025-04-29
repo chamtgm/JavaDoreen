@@ -151,10 +151,14 @@ public class StaticDrinkServing {
                 System.out.print("Enter new size in square meters: ");
                 if (scanner.hasNextDouble()) {
                     double newSize = scanner.nextDouble();
-                    if (newSize > 0) {
+                    if (newSize > 0 && newSize <= 1000) {
                         selectedSpot.updateSpotSize(newSize);
                         System.out.println(ANSI_GREEN + "Room size updated successfully!" + ANSI_RESET);
-                    } else {
+                    } 
+                    else if (newSize > 1000) {
+                        System.out.println(ANSI_RED + "Room size must be within 1m² to 1000m²." + ANSI_RESET);
+                    }
+                    else {
                         System.out.println(ANSI_RED + "Room size must be positive. No changes made." + ANSI_RESET);
                     }
                 } else {
