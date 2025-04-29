@@ -36,18 +36,8 @@ public class RestrictedSpots {
         this.avgTime = time;
         this.maxCapacity = (int) (spotArea / 1.0); // Assuming 1 meter² per person for social distancing
 
-        // Calculate the original random occupancy limit
-        int randomOccupancyLimit = (int) ((spotArea + 30) / 1.0);
-
-        // Generate a random sign (+1 or -1) and a random value (1-10)
-        int randomSign = RandomModifier.getRandomSign();
-        int randomValue = RandomModifier.getRandomValue();
-
-        // Adjust the randomOccupancyLimit
-        randomOccupancyLimit += randomSign * randomValue;
-
         // Generate random occupancy between 0 and the adjusted randomOccupancyLimit
-        this.currentOccupancy = new Random().nextInt(Math.max(1, randomOccupancyLimit + 1));
+        this.currentOccupancy = new Random().nextInt(Math.max(1, maxCapacity + 1));
     }
     
     /**
@@ -81,20 +71,4 @@ public class RestrictedSpots {
         }
     }
 
-    /**
-     * Regenerates the random occupancy for the spot.
-     */
-    public void regenerateOccupancy() {
-        int randomOccupancyLimit = (int) ((spotArea + 30) / 1.0);
-
-        // Generate a random sign (+1 or -1) and a random value (1-10)
-        int randomSign = RandomModifier.getRandomSign();
-        int randomValue = RandomModifier.getRandomValue();
-
-        // Adjust the randomOccupancyLimit
-        randomOccupancyLimit += randomSign * randomValue;
-
-        // Generate random occupancy between 0 and the adjusted randomOccupancyLimit
-        this.currentOccupancy = new Random().nextInt(Math.max(1, randomOccupancyLimit + 1));
-    }
 }

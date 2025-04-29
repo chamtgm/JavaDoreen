@@ -1,3 +1,7 @@
+// Ng Yoong Shen 20609660
+// Ivan Char Cheng Jun 20614522
+// Cham Jin Jie 20611325
+
 import java.util.Scanner;
 import java.util.regex.Pattern;
 

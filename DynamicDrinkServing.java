@@ -2,6 +2,7 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Random;
 import java.util.Scanner;
 
 public class DynamicDrinkServing {
@@ -111,7 +112,8 @@ public class DynamicDrinkServing {
         // Regenerate random occupancy and recalculate wait times
         System.out.println("\n" + ANSI_BLUE + "=== RELOADING SPOTS ===" + ANSI_RESET);
         for (RestrictedSpots spot : StaticDrinkServing.spots) {
-            spot.regenerateOccupancy(); // Regenerate random occupancy
+            // Generate random occupancy between 1 and maxCapacity + 30
+            spot.currentOccupancy = new Random().nextInt(spot.maxCapacity + 30) + 1;
         }
     }
     
